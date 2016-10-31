@@ -634,7 +634,7 @@ void RangeFinder::detect_instance(uint8_t instance)
         }
     }
     if (type == RangeFinder_TYPE_LEDDARONE) {
-#if 0
+#if 1
         if (AP_RangeFinder_LeddarOne::detect(*this, instance, serial_manager)) {
             state[instance].instance = instance;
             drivers[instance] = new AP_RangeFinder_LeddarOne(*this, instance, state[instance], serial_manager);

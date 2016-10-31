@@ -48,36 +48,54 @@ bool AP_RangeFinder_LeddarOne::detect(RangeFinder &_ranger, uint8_t instance, AP
 // read - return last value measured by sensor
 bool AP_RangeFinder_LeddarOne::get_reading(uint16_t &reading_cm)
 {
+	uint8_t number_detections;
+
+uint32_t debug_ms = AP_HAL::millis();
+
     if (uart == nullptr) {
         return false;
     }
+	switch (modbus_status) {
+	case LEDDARONE_MODBUS_PRE_SEND_REQUEST:
+	    // send a request message for Modbus function 4
+	    if (send_request() != LEDDARONE_OK) {
+	        // TODO: handle LEDDARONE_ERR_SERIAL_PORT
+	        break;
+	    }
+	    modbus_status = LEDDARONE_MODBUS_SENT_REQUEST;
+	    last_sending_request_ms = AP_HAL::millis();
+	    break;
 
-    // send a request message for Modbus function 4
-    if (send_request() != LEDDARONE_OK) {
-        // TODO: handle LEDDARONE_ERR_SERIAL_PORT
-        return false;
-    }
+	case LEDDARONE_MODBUS_SENT_REQUEST:
+		if (uart->available()) {
+			modbus_status = LEDDARONE_MODBUS_AVAILABLE;
+		} else {
+			if (AP_HAL::millis() - last_sending_request_ms > 200) {
+				modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
+			}
+		}
+		break;
 
-    uint32_t start_ms = AP_HAL::millis();
-    while (!uart->available()) {
-        // wait up to 200ms
-        if (AP_HAL::millis() - start_ms > 200) {
-            return false;
-        }
-    }
+	case LEDDARONE_MODBUS_AVAILABLE:
+		modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
 
-    // parse a response message, set number_detections, detections and sum_distance
-    // must be signed to handle errors
-    uint8_t number_detections;
-    if (parse_response(number_detections) != LEDDARONE_OK) {
-        // TODO: when (not LEDDARONE_OK) handle LEDDARONE_ERR_
-        return false;
-    }
+		// parse a response message, set number_detections, detections and sum_distance
+		// must be signed to handle errors
+		if (parse_response(number_detections) != LEDDARONE_OK) {
+			// TODO: when (not LEDDARONE_OK) handle LEDDARONE_ERR_
+			break;
+		}
 
-    // calculate average distance
-    reading_cm = sum_distance / number_detections;
+		// calculate average distance
+		reading_cm = sum_distance / number_detections;
 
-    return true;
+gcs_send_text_fmt(MAV_SEVERITY_DEBUG, "Leddar: %ucm, %u ms", reading_cm, AP_HAL::millis() - debug_ms);
+
+	return true;
+	}
+
+gcs_send_text_fmt(MAV_SEVERITY_DEBUG, "Leddar: get_reading %u ms", AP_HAL::millis() - debug_ms);
+	return false;
 }
 
 /*
@@ -218,4 +236,14 @@ LeddarOne_Status AP_RangeFinder_LeddarOne::parse_response(uint8_t &number_detect
     }
 
     return LEDDARONE_OK;
+}
+
+void AP_RangeFinder_LeddarOne::gcs_send_text_fmt(MAV_SEVERITY severity, const char *fmt, ...)
+{
+    char str[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] {};
+    va_list arg_list;
+    va_start(arg_list, fmt);
+    hal.util->vsnprintf((char *)str, sizeof(str), fmt, arg_list);
+    va_end(arg_list);
+    GCS_MAVLINK::send_statustext(severity, 0xFF, str);
 }

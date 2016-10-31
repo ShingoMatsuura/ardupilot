@@ -20,6 +20,12 @@ enum LeddarOne_Status {
     LEDDARONE_ERR_NUMBER_DETECTIONS = -6
 };
 
+enum LeddarOne_ModbusStatus {
+	LEDDARONE_MODBUS_PRE_SEND_REQUEST = 0,
+	LEDDARONE_MODBUS_SENT_REQUEST,
+	LEDDARONE_MODBUS_AVAILABLE
+};
+
 class AP_RangeFinder_LeddarOne : public AP_RangeFinder_Backend
 {
 
@@ -49,7 +55,12 @@ private:
 
     AP_HAL::UARTDriver *uart = nullptr;
     uint32_t last_reading_ms;
+    uint32_t last_sending_request_ms;
 
     uint16_t detections[LEDDARONE_DETECTIONS_MAX];
     uint32_t sum_distance;
+
+    LeddarOne_ModbusStatus modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
+
+    void gcs_send_text_fmt(MAV_SEVERITY severity, const char *fmt, ...);
 };

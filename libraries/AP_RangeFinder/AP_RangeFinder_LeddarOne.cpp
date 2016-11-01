@@ -63,43 +63,45 @@ uint32_t debug_ms = AP_HAL::millis();
     if (uart == nullptr) {
         return false;
     }
+
 	switch (modbus_status) {
-	case LEDDARONE_MODBUS_PRE_SEND_REQUEST:
-	    // send a request message for Modbus function 4
-	    if (send_request() != LEDDARONE_OK) {
-	        // TODO: handle LEDDARONE_ERR_SERIAL_PORT
-	        break;
-	    }
-	    modbus_status = LEDDARONE_MODBUS_SENT_REQUEST;
-	    last_sending_request_ms = AP_HAL::millis();
-	    break;
 
-	case LEDDARONE_MODBUS_SENT_REQUEST:
-		if (uart->available()) {
-			modbus_status = LEDDARONE_MODBUS_AVAILABLE;
-		} else {
-			if (AP_HAL::millis() - last_sending_request_ms > 200) {
-				modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
+		case LEDDARONE_MODBUS_PRE_SEND_REQUEST:
+			// send a request message for Modbus function 4
+			if (send_request() != LEDDARONE_OK) {
+				// TODO: handle LEDDARONE_ERR_SERIAL_PORT
+				break;
 			}
-		}
-		break;
-
-	case LEDDARONE_MODBUS_AVAILABLE:
-		modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
-
-		// parse a response message, set number_detections, detections and sum_distance
-		// must be signed to handle errors
-		if (parse_response(number_detections) != LEDDARONE_OK) {
-			// TODO: when (not LEDDARONE_OK) handle LEDDARONE_ERR_
+			modbus_status = LEDDARONE_MODBUS_SENT_REQUEST;
+			last_sending_request_ms = AP_HAL::millis();
 			break;
-		}
 
-		// calculate average distance
-		reading_cm = sum_distance / number_detections;
+		case LEDDARONE_MODBUS_SENT_REQUEST:
+			if (uart->available()) {
+				modbus_status = LEDDARONE_MODBUS_AVAILABLE;
+			} else {
+				if (AP_HAL::millis() - last_sending_request_ms > 200) {
+					modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
+				}
+			}
+			break;
+
+		case LEDDARONE_MODBUS_AVAILABLE:
+			modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
+
+			// parse a response message, set number_detections, detections and sum_distance
+			// must be signed to handle errors
+			if (parse_response(number_detections) != LEDDARONE_OK) {
+				// TODO: when (not LEDDARONE_OK) handle LEDDARONE_ERR_
+				break;
+			}
+
+			// calculate average distance
+			reading_cm = sum_distance / number_detections;
 
 gcs_send_text_fmt(MAV_SEVERITY_DEBUG, "Leddar: %ucm, %u ms", reading_cm, AP_HAL::millis() - debug_ms);
 
-		return true;
+			return true;
 	}
 
 gcs_send_text_fmt(MAV_SEVERITY_DEBUG, "Leddar: get_reading %u ms", AP_HAL::millis() - debug_ms);
@@ -170,6 +172,8 @@ LeddarOne_Status AP_RangeFinder_LeddarOne::send_request(void)
     }
 
     // Modbus read input register (function code 0x04)
+    // data_buffer[3] = 20: Address of first register to read
+    // data_buffer[5] = 10: The number of consecutive registers to read
     data_buffer[0] = LEDDARONE_DEFAULT_ADDRESS;
     data_buffer[1] = 0x04;
     data_buffer[2] = 0;

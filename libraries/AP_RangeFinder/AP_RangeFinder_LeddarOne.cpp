@@ -20,6 +20,14 @@
 extern const AP_HAL::HAL& hal;
 
 /*
+
+   The based on Arduino LeddarOne sample
+   --------------------------------------------------------
+       http://playground.arduino.cc/Code/Leddar
+   --------------------------------------------------------
+ */
+
+/*
    The constructor also initialises the rangefinder. Note that this
    constructor is not called until detect() returns true, so we
    already know that we should setup the rangefinder
@@ -91,7 +99,7 @@ uint32_t debug_ms = AP_HAL::millis();
 
 gcs_send_text_fmt(MAV_SEVERITY_DEBUG, "Leddar: %ucm, %u ms", reading_cm, AP_HAL::millis() - debug_ms);
 
-	return true;
+		return true;
 	}
 
 gcs_send_text_fmt(MAV_SEVERITY_DEBUG, "Leddar: get_reading %u ms", AP_HAL::millis() - debug_ms);
@@ -209,7 +217,7 @@ LeddarOne_Status AP_RangeFinder_LeddarOne::parse_response(uint8_t &number_detect
         }
     }
 
-    if (len != 25) {
+    if (len != 25 || data_buffer[1] != 0x04) {
     	return LEDDARONE_ERR_BAD_RESPONSE;
     }
 

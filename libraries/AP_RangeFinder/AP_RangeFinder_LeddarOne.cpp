@@ -85,6 +85,7 @@ uint32_t debug_ms = AP_HAL::millis();
 				modbus_status = LEDDARONE_MODBUS_AVAILABLE;
 			} else {
 				if (AP_HAL::millis() - last_sending_request_ms > 200) {
+					// reset mod_bus status to read new buffer
 					modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
 				}
 			}
@@ -100,7 +101,6 @@ uint32_t debug_ms = AP_HAL::millis();
 				// reset mod_bus status to read new buffer
 				modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
 
-				gcs_send_text_fmt(MAV_SEVERITY_DEBUG, "Leddar: %ucm, %u ms", reading_cm, AP_HAL::millis() - debug_ms);
 				return true;
 			}
 			// keep reading next buffer
@@ -111,11 +111,9 @@ uint32_t debug_ms = AP_HAL::millis();
 			else {
 				modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
 			}
-
 			break;
 	}
 
-gcs_send_text_fmt(MAV_SEVERITY_DEBUG, "Leddar: get_reading %u ms", AP_HAL::millis() - debug_ms);
 	return false;
 }
 
@@ -257,14 +255,4 @@ LeddarOne_Status AP_RangeFinder_LeddarOne::parse_response(uint8_t &number_detect
     }
 
     return LEDDARONE_OK;
-}
-
-void AP_RangeFinder_LeddarOne::gcs_send_text_fmt(MAV_SEVERITY severity, const char *fmt, ...)
-{
-    char str[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN] {};
-    va_list arg_list;
-    va_start(arg_list, fmt);
-    hal.util->vsnprintf((char *)str, sizeof(str), fmt, arg_list);
-    va_end(arg_list);
-    GCS_MAVLINK::send_statustext(severity, 0xFF, str);
 }

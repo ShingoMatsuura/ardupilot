@@ -2,7 +2,6 @@
 
 #include "RangeFinder.h"
 #include "RangeFinder_Backend.h"
-#include <GCS_MAVLink/GCS.h>
 
 #define LEDDARONE_DETECTIONS_MAX 3
 
@@ -66,6 +65,4 @@ private:
     LeddarOne_ModbusStatus modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
     uint8_t read_buffer[25] = {0};
     uint32_t read_len = 0;
-
-    void gcs_send_text_fmt(MAV_SEVERITY severity, const char *fmt, ...);
 };

@@ -63,6 +63,6 @@ private:
     uint32_t sum_distance;
 
     LeddarOne_ModbusStatus modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
-    uint8_t read_buffer[25] = {0};
-    uint32_t read_len = 0;
+    uint8_t read_buffer[25];
+    uint32_t read_len;
 };

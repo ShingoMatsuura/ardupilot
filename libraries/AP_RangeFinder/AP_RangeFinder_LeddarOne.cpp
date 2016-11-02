@@ -58,8 +58,6 @@ bool AP_RangeFinder_LeddarOne::get_reading(uint16_t &reading_cm)
 	uint8_t number_detections;
 	LeddarOne_Status states;
 
-uint32_t debug_ms = AP_HAL::millis();
-
     if (uart == nullptr) {
         return false;
     }

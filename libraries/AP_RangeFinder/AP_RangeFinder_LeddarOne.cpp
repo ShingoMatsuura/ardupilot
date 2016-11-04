@@ -56,7 +56,7 @@ bool AP_RangeFinder_LeddarOne::detect(RangeFinder &_ranger, uint8_t instance, AP
 bool AP_RangeFinder_LeddarOne::get_reading(uint16_t &reading_cm)
 {
     uint8_t number_detections;
-    LeddarOne_Status states;
+    LeddarOne_Status leddarone_status;
 
     if (uart == nullptr) {
         return false;
@@ -80,6 +80,7 @@ bool AP_RangeFinder_LeddarOne::get_reading(uint16_t &reading_cm)
 
         case LEDDARONE_MODBUS_SENT_REQUEST:
             if (uart->available()) {
+                // change mod_bus status to read available buffer
                 modbus_status = LEDDARONE_MODBUS_AVAILABLE;
             } else {
                 if (AP_HAL::millis() - last_sending_request_ms > 200) {
@@ -91,9 +92,9 @@ bool AP_RangeFinder_LeddarOne::get_reading(uint16_t &reading_cm)
 
         case LEDDARONE_MODBUS_AVAILABLE:
             // parse a response message, set number_detections, detections and sum_distance
-            states = parse_response(number_detections);
+            leddarone_status = parse_response(number_detections);
 
-            if (states == LEDDARONE_OK) {
+            if (leddarone_status == LEDDARONE_OK) {
                 reading_cm = sum_distance / number_detections;
 
                 // reset mod_bus status to read new buffer
@@ -102,11 +103,13 @@ bool AP_RangeFinder_LeddarOne::get_reading(uint16_t &reading_cm)
                 return true;
             }
             // keep reading next buffer
-            else if (states == LEDDARONE_READING_BUFFER) {
+            else if (leddarone_status == LEDDARONE_READING_BUFFER) {
+                // not change mod_bus status, keep reading
                 break;
             }
-            // reset mod_bus status to read new buffer
+            // leddarone_status is LEDDARONE_ERR_*
             else {
+                // reset mod_bus status to read new buffer
                 modbus_status = LEDDARONE_MODBUS_PRE_SEND_REQUEST;
             }
             break;

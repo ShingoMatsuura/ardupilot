@@ -919,6 +919,20 @@ private:
     void parachute_release();
     void parachute_manual_release();
 
+    // put mode
+    bool put_init(bool ignore_checks);
+    void put_run();
+    void put_gps_run();
+    void put_nogps_run();
+    int32_t put_get_alt_above_ground(void);
+    void put_run_vertical_control(bool pause_descent);
+    void put_run_horizontal_control();
+    void put_control_servo_at_desire_alt();
+    void put_do_not_use_GPS();
+    void set_mode_put_with_pause(mode_reason_t reason);
+    bool putting_with_GPS();
+
+
     // support for AP_Avoidance custom flight mode, AVOID_ADSB
     bool avoid_adsb_init(bool ignore_checks);
     void avoid_adsb_run();

@@ -103,6 +103,7 @@ enum control_mode_t {
     THROW =        18,  // throw to launch mode using inertial/GPS system, no pilot input
     AVOID_ADSB =   19,  // automatic avoidance of obstacles in the macro scale - e.g. full-sized aircraft
     GUIDED_NOGPS = 20,  // guided mode but only accepts attitude and altitude
+    PUT =          21,  // automatic descending and release gripper at desire alt
 };
 
 enum mode_reason_t {
@@ -123,6 +124,7 @@ enum mode_reason_t {
     MODE_REASON_AVOIDANCE,
     MODE_REASON_AVOIDANCE_RECOVERY,
     MODE_REASON_THROW_COMPLETE,
+    MODE_REASON_PUT_COMPLETE,
 };
 
 // Tuning enumeration
@@ -290,6 +292,14 @@ enum PayloadPlaceStateType {
 // bit options for DEV_OPTIONS parameter
 enum DevOptions {
     DevOptionADSBMAVLink = 1,
+};
+
+// Put types
+enum PutStateType {
+    PutStateType_Descending = 0,
+    PutStateType_ReachedDesireAlt,
+    PutStateType_ControlServo,
+    PutstateType_PutComplete,
 };
 
 //  Logging parameters

@@ -19,18 +19,18 @@ bool Copter::put_init(bool ignore_checks)
     if (put_with_gps) {
         // set target to stopping point
         Vector3f stopping_point;
-        wp_nav.get_loiter_stopping_point_xy(stopping_point);
-        wp_nav.init_loiter_target(stopping_point);
+        wp_nav->get_loiter_stopping_point_xy(stopping_point);
+        wp_nav->init_loiter_target(stopping_point);
     }
 
     // initialize vertical speeds and leash lengths
-    pos_control.set_speed_z(wp_nav.get_speed_down(), wp_nav.get_speed_up());
-    pos_control.set_accel_z(wp_nav.get_accel_z());
+    pos_control->set_speed_z(wp_nav->get_speed_down(), wp_nav->get_speed_up());
+    pos_control->set_accel_z(wp_nav->get_accel_z());
 
     // initialise position and desired velocity
-    if (!pos_control.is_active_z()) {
-        pos_control.set_alt_target_to_current_alt();
-        pos_control.set_desired_velocity_z(inertial_nav.get_velocity_z());
+    if (!pos_control->is_active_z()) {
+        pos_control->set_alt_target_to_current_alt();
+        pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
     
     put_start_time = millis();
@@ -89,7 +89,7 @@ void Copter::put_run()
 void Copter::put_gps_run()
 {
     // set motors to full range
-    motors.set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
+    motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
     
     // pause before beginning land descent
     if(put_pause && millis()-put_start_time >= LAND_WITH_DELAY_MS) {
@@ -129,10 +129,10 @@ void Copter::put_nogps_run()
     }
 
     // set motors to full range
-    motors.set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
+    motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
 
     // call attitude controller
-    attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate, get_smoothing_gain());
+    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate, get_smoothing_gain());
 
     // pause before beginning land descent
     if(put_pause && millis()-put_start_time >= LAND_WITH_DELAY_MS) {
@@ -151,7 +151,7 @@ int32_t Copter::put_get_alt_above_ground(void)
     if (rangefinder_alt_ok()) {
         alt_above_ground = rangefinder_state.alt_cm_filt.get();
     } else {
-        bool navigating = pos_control.is_active_xy();
+        bool navigating = pos_control->is_active_xy();
         if (!navigating || !current_loc.get_alt_cm(Location_Class::ALT_FRAME_ABOVE_TERRAIN, alt_above_ground)) {
             alt_above_ground = current_loc.alt;
         }
@@ -161,7 +161,7 @@ int32_t Copter::put_get_alt_above_ground(void)
 
 void Copter::put_run_vertical_control(bool pause_descent)
 {
-    bool navigating = pos_control.is_active_xy();
+    bool navigating = pos_control->is_active_xy();
 
     // compute desired velocity
     const float precput_acceptable_error = 15.0f;
@@ -169,11 +169,10 @@ void Copter::put_run_vertical_control(bool pause_descent)
     int32_t alt_above_ground = put_get_alt_above_ground();
 
     if (alt_above_ground <= PUT_GRIP_RELEASE_ALT) {
-        desired_climb_rate = 0.0f;
 
         // update altitude target and call position controller
-        pos_control.set_alt_target_from_climb_rate_ff(0.0f, G_Dt, true);
-        pos_control.update_z_controller();
+        pos_control->set_alt_target_from_climb_rate_ff(0.0f, G_Dt, true);
+        pos_control->update_z_controller();
 
     	put_state = PutStateType_ReachedDesireAlt;
     	return;
@@ -185,25 +184,22 @@ void Copter::put_run_vertical_control(bool pause_descent)
         if (g.land_speed_high > 0) {
             max_put_descent_velocity = -g.land_speed_high;
         } else {
-            max_put_descent_velocity = pos_control.get_speed_down();
+            max_put_descent_velocity = pos_control->get_speed_down();
         }
 
         // Don't speed up for landing.
         max_put_descent_velocity = MIN(max_put_descent_velocity, -abs(g.land_speed));
 
         // Compute a vertical velocity demand such that the vehicle approaches put_START_ALT. Without the below constraint, this would cause the vehicle to hover at put_START_ALT.
-        cmb_rate = AC_AttitudeControl::sqrt_controller(LAND_START_ALT-alt_above_ground, g.p_alt_hold.kP(), pos_control.get_accel_z());
+        cmb_rate = AC_AttitudeControl::sqrt_controller(LAND_START_ALT-alt_above_ground, g.p_alt_hold.kP(), pos_control->get_accel_z());
 
         // Constrain the demanded vertical velocity so that it is between the configured maximum descent speed and the configured minimum descent speed.
         cmb_rate = constrain_float(cmb_rate, max_put_descent_velocity, -abs(g.land_speed));
     }
 
-    // record desired climb rate for logging
-    desired_climb_rate = cmb_rate;
-
     // update altitude target and call position controller
-    pos_control.set_alt_target_from_climb_rate_ff(cmb_rate, G_Dt, true);
-    pos_control.update_z_controller();
+    pos_control->set_alt_target_from_climb_rate_ff(cmb_rate, G_Dt, true);
+    pos_control->update_z_controller();
 }
 
 void Copter::put_run_horizontal_control()
@@ -240,13 +236,13 @@ void Copter::put_run_horizontal_control()
     }
     
     // process roll, pitch inputs
-    wp_nav.set_pilot_desired_acceleration(roll_control, pitch_control);
+    wp_nav->set_pilot_desired_acceleration(roll_control, pitch_control);
 
     // run loiter controller
-    wp_nav.update_loiter(ekfGndSpdLimit, ekfNavVelGainScaler);
+    wp_nav->update_loiter(ekfGndSpdLimit, ekfNavVelGainScaler);
 
-    int32_t nav_roll  = wp_nav.get_roll();
-    int32_t nav_pitch = wp_nav.get_pitch();
+    int32_t nav_roll  = wp_nav->get_roll();
+    int32_t nav_pitch = wp_nav->get_pitch();
 
     if (g2.wp_navalt_min > 0) {
         // user has requested an altitude below which navigation
@@ -265,13 +261,13 @@ void Copter::put_run_horizontal_control()
             nav_pitch *= ratio;
 
             // tell position controller we are applying an external limit
-            pos_control.set_limit_accel_xy();
+            pos_control->set_limit_accel_xy();
         }
     }
 
     
     // call attitude controller
-    attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(nav_roll, nav_pitch, target_yaw_rate, get_smoothing_gain());
+    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(nav_roll, nav_pitch, target_yaw_rate, get_smoothing_gain());
 }
 
 // control servo when reached to desire alt.

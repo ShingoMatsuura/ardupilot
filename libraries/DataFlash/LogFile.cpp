@@ -642,6 +642,8 @@ void DataFlash_Class::Log_Write_GPS(const AP_GPS &gps, uint8_t i, uint64_t time_
         time_us = AP_HAL::micros64();
     }
     const struct Location &loc = gps.location(i);
+    float yaw_deg=0, yaw_accuracy_deg=0;
+    gps.gps_yaw_deg(i, yaw_deg, yaw_accuracy_deg);
     struct log_GPS pkt = {
         LOG_PACKET_HEADER_INIT((uint8_t)(LOG_GPS_MSG+i)),
         time_us       : time_us,
@@ -656,6 +658,7 @@ void DataFlash_Class::Log_Write_GPS(const AP_GPS &gps, uint8_t i, uint64_t time_
         ground_speed  : gps.ground_speed(i),
         ground_course : gps.ground_course(i),
         vel_z         : gps.velocity(i).z,
+        yaw           : yaw_deg,
         used          : (uint8_t)(gps.primary_sensor() == i)
     };
     WriteBlock(&pkt, sizeof(pkt));

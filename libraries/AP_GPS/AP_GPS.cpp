@@ -252,6 +252,13 @@ const AP_Param::GroupInfo AP_GPS::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("BLEND_TC", 21, AP_GPS, _blend_tc, 10.0f),
 
+    // @Param: HDG_ENABLE
+    // @DisplayName: Use GPS yaw if available
+    // @Description: Enables the ArduPilot system to use the a true heading (yaw) from the GPS if available. This can come from some GPS types which can estimate heading when not moving. An example is some NMEA GPS units which support the HDT NMEA sentence.
+    // @Values: 0:Disabled,1:Enabled
+    // @User: Advanced
+    AP_GROUPINFO("HDG_ENABLE", 22, AP_GPS, _heading_enable, 0),
+
     AP_GROUPEND
 };
 
@@ -541,7 +548,7 @@ void AP_GPS::detect_instance(uint8_t instance)
         } else if (now - dstate->detect_started_ms > (ARRAY_SIZE(_baudrates) * GPS_BAUD_TIME_MS)) {
             // prevent false detection of NMEA mode in
             // a MTK or UBLOX which has booted in NMEA mode
-            if ((_type[instance] == GPS_TYPE_AUTO || _type[instance] == GPS_TYPE_NMEA) &&
+            if ((_type[instance] == GPS_TYPE_AUTO || _type[instance] == GPS_TYPE_NMEA || _type[instance] == GPS_TYPE_HEMI) &&
                 AP_GPS_NMEA::_detect(dstate->nmea_detect_state, data)) {
                 new_gps = new AP_GPS_NMEA(*this, state[instance], _port[instance]);
             }

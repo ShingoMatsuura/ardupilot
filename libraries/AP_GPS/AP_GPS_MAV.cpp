@@ -140,6 +140,10 @@ void AP_GPS_MAV::handle_msg(const mavlink_message_t *msg)
                 state.num_sats = packet.satellites_visible;
             }
             state.last_gps_time_ms = AP_HAL::millis();
+
+            state.gps_yaw = state.ground_course;
+            state.have_gps_yaw = true;
+
             _new_data = true;
             break;
             }

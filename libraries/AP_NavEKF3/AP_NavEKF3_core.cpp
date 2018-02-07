@@ -126,6 +126,9 @@ bool NavEKF3_core::setup_core(NavEKF3 *_frontend, uint8_t _imu_index, uint8_t _c
     if(!storedBodyOdm.init(obs_buffer_length)) {
         return false;
     }
+    if(!storedYawAng.init(obs_buffer_length)) {
+        return false;
+    }
     // Note: the use of dual range finders potentially doubles the amount of data to be stored
     if(!storedRange.init(MIN(2*obs_buffer_length , imu_buffer_length))) {
         return false;
@@ -374,6 +377,12 @@ void NavEKF3_core::InitialiseVariables()
     bodyVelFusionDelayed = false;
     bodyVelFusionActive = false;
 
+    // yaw sensor fusion
+    yawMeasTime_ms = 0;
+    memset(&yawAngDataNew, 0, sizeof(yawAngDataNew));
+    memset(&yawAngDataDelayed, 0, sizeof(yawAngDataDelayed));
+
+
     // zero data buffers
     storedIMU.reset();
     storedGPS.reset();
@@ -384,6 +393,7 @@ void NavEKF3_core::InitialiseVariables()
     storedOutput.reset();
     storedRangeBeacon.reset();
     storedBodyOdm.reset();
+    storedYawAng.reset();
 }
 
 // Initialise the states from accelerometer and magnetometer data (if present)

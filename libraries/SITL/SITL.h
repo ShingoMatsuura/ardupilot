@@ -116,6 +116,8 @@ public:
     AP_Int8  pin_mask; // for GPIO emulation
     AP_Float speedup; // simulation speedup
     AP_Int8  odom_enable; // enable visual odomotry data
+
+    AP_Int8 gps_hdg_enabled; // enable the output of a NMEA heading HDT sentence
     
     // wind control
     float wind_speed_active;

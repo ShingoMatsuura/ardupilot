@@ -842,11 +842,17 @@ void NavEKF3_core::selectHeightForFusion()
             posDownObsNoise = sq(constrain_float(frontend->_rngNoise, 0.1f, 10.0f));
             // add uncertainty created by terrain gradient and vehicle tilt
             posDownObsNoise += sq(rangeDataDelayed.rng * frontend->_terrGradMax) * MAX(0.0f , (1.0f - sq(prevTnb.c.z)));
+
+            GCS_MAVLINK::send_statustext_all(MAV_SEVERITY_INFO, "EKF3 IMU%u select rangefinder measurement alt source height %f[m]", (unsigned)imu_index, hgtMea);
         } else {
             // disable fusion if tilted too far
             fuseHgtData = false;
+
+            GCS_MAVLINK::send_statustext_all(MAV_SEVERITY_INFO, "EKF3 IMU%u select rangefinder measurement alt source height, disable fusion if tilted too far", (unsigned)imu_index);
         }
     } else if  (gpsDataToFuse && (activeHgtSource == HGT_SOURCE_GPS)) {
+        GCS_MAVLINK::send_statustext_all(MAV_SEVERITY_INFO, "EKF3 IMU%u select GPS measurement alt source", (unsigned)imu_index);
+
         // using GPS data
         hgtMea = gpsDataDelayed.hgt;
         // enable fusion
@@ -858,6 +864,8 @@ void NavEKF3_core::selectHeightForFusion()
             posDownObsNoise = sq(constrain_float(1.5f * frontend->_gpsHorizPosNoise, 0.1f, 10.0f));
         }
     } else if (baroDataToFuse && (activeHgtSource == HGT_SOURCE_BARO)) {
+        GCS_MAVLINK::send_statustext_all(MAV_SEVERITY_INFO, "EKF3 IMU%u select baro measurement alt source", (unsigned)imu_index);
+
         // using Baro data
         hgtMea = baroDataDelayed.hgt - baroHgtOffset;
         // enable fusion
@@ -874,6 +882,8 @@ void NavEKF3_core::selectHeightForFusion()
             hgtMea = MAX(hgtMea, meaHgtAtTakeOff);
         }
     } else {
+        GCS_MAVLINK::send_statustext_all(MAV_SEVERITY_INFO, "EKF3 IMU%u select NO measurement alt source", (unsigned)imu_index);
+
         fuseHgtData = false;
     }
 

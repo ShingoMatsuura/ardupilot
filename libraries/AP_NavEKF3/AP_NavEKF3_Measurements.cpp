@@ -83,7 +83,6 @@ void NavEKF3_core::readRangeFinder(void)
 
                 // indicate we have updated the measurement
                 rngValidMeaTime_ms = imuSampleTime_ms;
-
             } else if (!takeOffDetected && ((imuSampleTime_ms - rngValidMeaTime_ms) > 200)) {
                 // before takeoff we assume on-ground range value if there is no data
                 rangeDataNew.time_ms = imuSampleTime_ms;
@@ -100,7 +99,6 @@ void NavEKF3_core::readRangeFinder(void)
 
                 // indicate we have updated the measurement
                 rngValidMeaTime_ms = imuSampleTime_ms;
-
             }
         }
     }
@@ -604,7 +602,7 @@ void NavEKF3_core::readBaroData()
 void NavEKF3_core::calcFiltBaroOffset()
 {
     // Apply a first order LPF with spike protection
-    baroHgtOffset += 0.1f * constrain_float(baroDataDelayed.hgt + stateStruct.position.z - baroHgtOffset, -5.0f, 5.0f);
+    baroHgtOffset += 0.01f * constrain_float(baroDataDelayed.hgt + stateStruct.position.z - baroHgtOffset, -5.0f, 5.0f);
 }
 
 // calculate filtered offset between GPS height measurement and EKF height estimate

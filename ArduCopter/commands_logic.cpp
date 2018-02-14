@@ -349,7 +349,7 @@ void Copter::do_nav_wp(const AP_Mission::Mission_Command& cmd)
 
     // if no delay set the waypoint as "fast"
     if (loiter_time_max == 0 ) {
-        wp_nav->set_fast_waypoint(true);
+        // wp_nav->set_fast_waypoint(true);
     }
 }
 

@@ -287,13 +287,14 @@ void NavEKF2_core::SelectVelPosFusion()
     } else if (extNavDataToFuse && PV_AidingMode == AID_ABSOLUTE) {
         // This is a special case that uses and external nav system for position
         extNavUsedForPos = true;
-        activeHgtSource = HGT_SOURCE_EV;
         fuseVelData = false;
         fuseHgtData = true;
         fusePosData = true;
         velPosObs[3] = extNavDataDelayed.pos.x;
         velPosObs[4] = extNavDataDelayed.pos.y;
-        velPosObs[5] = extNavDataDelayed.pos.z;
+        if (activeHgtSource == HGT_SOURCE_EV) {
+            velPosObs[5] = extNavDataDelayed.pos.z;
+        }
 
         // if compass is disabled, also use it for yaw
         if (!use_compass()) {
@@ -800,7 +801,7 @@ void NavEKF2_core::selectHeightForFusion()
     baroDataToFuse = storedBaro.recall(baroDataDelayed, imuDataDelayed.time_ms);
 
     // select height source
-    if (extNavUsedForPos) {
+    if ((frontend->_altSource == 4) && extNavUsedForPos) {
         // always use external vision as the hight source if using for position.
         activeHgtSource = HGT_SOURCE_EV;
     } else if (((frontend->_useRngSwHgt > 0) || (frontend->_altSource == 1)) && (imuSampleTime_ms - rngValidMeaTime_ms < 500)) {
